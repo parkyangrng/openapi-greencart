@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GreenCart Inventory Query API — Developer Portal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --surface-0: #f5f5f3;
+      --surface-1: #f0f0ee;
+      --surface-2: #ffffff;
+      --text-primary: #1a1a18;
+      --text-secondary: #4a4a47;
+      --text-muted: #888780;
+      --text-accent: #185fa5;
+      --text-success: #0b6b50;
+      --bg-success: #e6f7ef;
+      --border: rgba(0,0,0,0.10);
+      --border-strong: rgba(0,0,0,0.18);
+      --border-success: rgba(99,153,34,0.35);
+      --radius: 8px;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --surface-0: #1c1c1a;
+        --surface-1: #252522;
+        --surface-2: #2e2e2b;
+        --text-primary: #e8e8e4;
+        --text-secondary: #b0b0aa;
+        --text-muted: #6e6e68;
+        --text-accent: #6fa3f8;
+        --text-success: #46c7a5;
+        --bg-success: #0b2e1e;
+        --border: rgba(255,255,255,0.08);
+        --border-strong: rgba(255,255,255,0.14);
+        --border-success: rgba(29,158,117,0.35);
+      }
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--surface-0);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+    .page-wrap { max-width: 800px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+    .portal { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden; }
+
+    .topbar { background: var(--surface-1); border-bottom: 0.5px solid var(--border); padding: 9px 16px; display: flex; align-items: center; gap: 8px; }
+    .rdot { width: 7px; height: 7px; border-radius: 50%; background: #46c7a5; flex-shrink: 0; }
+    .topbar-title { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+    .topbar-url { font-size: 11px; color: var(--text-muted); margin-left: auto; font-family: var(--font-mono); }
+
+    .hero { padding: 20px 18px 16px; border-bottom: 0.5px solid var(--border); }
+    .open-badge { display: inline-flex; align-items: center; gap: 5px; background: #eaf3de; border: 0.5px solid #639922; border-radius: 4px; padding: 3px 9px; font-size: 11px; font-weight: 500; color: #27500a; margin-bottom: 10px; }
+    @media (prefers-color-scheme: dark) { .open-badge { background: #173404; border-color: #3b6d11; color: #97c459; } }
+    .hero h1 { font-size: 20px; font-weight: 500; margin-bottom: 5px; }
+    .hero p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; max-width: 560px; }
+    .meta { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+    .mi { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
+    .mi b { color: var(--text-secondary); font-weight: 500; }
+
+    .servers { padding: 10px 18px; background: var(--surface-1); border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .slbl { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); font-weight: 500; width: 52px; flex-shrink: 0; }
+    .spill { display: flex; align-items: center; gap: 6px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 6px; padding: 5px 10px; font-size: 12px; font-family: var(--font-mono); color: var(--text-secondary); }
+    .spill .d { width: 6px; height: 6px; border-radius: 50%; background: #46c7a5; flex-shrink: 0; }
+    .etag { font-size: 10px; background: #eaf3de; color: #27500a; border-radius: 3px; padding: 1px 5px; font-family: var(--font-sans); font-weight: 500; }
+    @media (prefers-color-scheme: dark) { .etag { background: #173404; color: #97c459; } }
+
+    .notice { margin: 14px 18px; background: var(--bg-success); border: 0.5px solid var(--border-success); border-radius: 8px; padding: 11px 13px; display: flex; align-items: flex-start; gap: 9px; }
+    .notice p { font-size: 12px; color: var(--text-success); line-height: 1.6; }
+
+    .nav { display: flex; gap: 4px; padding: 10px 18px; border-bottom: 0.5px solid var(--border); overflow-x: auto; }
+    .np { font-size: 11px; padding: 5px 10px; border-radius: 6px; border: 0.5px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 4px; font-family: var(--font-sans); }
+    .np:hover { background: var(--surface-1); }
+    .np.act { background: var(--surface-1); color: var(--text-primary); border-color: var(--border-strong); }
+    .nc { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .c-inv { background: #e6f7ef; } .c-prod { background: #e8f0fe; } .c-store { background: #f3e8fd; } .c-cat { background: #fff4e0; }
+    @media (prefers-color-scheme: dark) {
+      .c-inv { background: #0b2e1e; } .c-prod { background: #0d1f4a; } .c-store { background: #1e0b3a; } .c-cat { background: #2e1e00; }
+    }
+
+    .secs { padding: 0 18px 18px; }
+    .sb { margin-top: 14px; }
+    .sh { display: flex; align-items: center; gap: 8px; padding: 10px 0 7px; cursor: pointer; user-select: none; border-bottom: 0.5px solid var(--border); }
+    .sh h2 { font-size: 12px; font-weight: 500; color: var(--text-secondary); flex: 1; }
+    .stag { font-size: 10px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 3px; padding: 1px 6px; color: var(--text-muted); }
+    .chev { font-size: 13px; color: var(--text-muted); transition: transform .18s; }
+    .chev.op { transform: rotate(180deg); }
+
+    .ep { border: 0.5px solid var(--border); border-radius: 7px; margin: 6px 0; overflow: hidden; }
+    .er { display: flex; align-items: center; gap: 9px; padding: 9px 12px; cursor: pointer; background: var(--surface-2); }
+    .er:hover { background: var(--surface-1); }
+    .mth { font-size: 10px; font-weight: 500; font-family: var(--font-mono); padding: 2px 6px; border-radius: 3px; min-width: 38px; text-align: center; flex-shrink: 0; }
+    .get { background: #e8f0fe; color: #185fa5; border: 0.5px solid #85b7eb; }
+    @media (prefers-color-scheme: dark) { .get { background: #0d1f4a; color: #6fa3f8; border-color: #2a4a9a; } }
+    .epath { font-size: 12px; font-family: var(--font-mono); color: var(--text-primary); flex: 1; }
+    .epath .pm { color: var(--text-accent); }
+    .esum { font-size: 11px; color: var(--text-muted); margin-left: auto; text-align: right; max-width: 180px; }
+    .ed { display: none; border-top: 0.5px solid var(--border); padding: 13px 12px; background: var(--surface-0); }
+    .ed.op { display: block; }
+    .ddesc { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 11px; }
+    .ptitle { font-size: 10px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+    .ptbl { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+    .ptbl th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 3px 8px; border-bottom: 0.5px solid var(--border); }
+    .ptbl td { padding: 4px 8px; color: var(--text-secondary); border-bottom: 0.5px solid var(--border); vertical-align: top; overflow: hidden; text-overflow: ellipsis; }
+    .ptbl td:first-child { font-family: var(--font-mono); color: var(--text-primary); font-size: 10px; width: 130px; }
+    .ptbl td:nth-child(2) { width: 80px; }
+    .tb { display: inline-block; font-size: 9px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 3px; padding: 1px 4px; font-family: var(--font-mono); color: var(--text-muted); }
+    .rq { color: #e24b4a; font-size: 9px; }
+    .rblock { margin-top: 11px; }
+    .rrow { display: flex; gap: 8px; align-items: center; padding: 3px 0; }
+    .rc { font-size: 10px; font-family: var(--font-mono); font-weight: 500; min-width: 32px; }
+    .r200 { color: #0b6b50; } .r400 { color: #a02020; } .r404 { color: #a02020; }
+    @media (prefers-color-scheme: dark) { .r200 { color: #46c7a5; } .r400 { color: #f07070; } .r404 { color: #f07070; } }
+    .rmsg { font-size: 11px; color: var(--text-muted); }
+    .cb { background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 6px; padding: 10px; margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); overflow-x: auto; line-height: 1.8; white-space: pre; }
+    .k { color: var(--text-accent); }
+    .s { color: #0b6b50; }
+    .n { color: #7a4800; }
+    @media (prefers-color-scheme: dark) { .s { color: #46c7a5; } .n { color: #f0a040; } }
+    .trybtn { margin-top: 9px; font-size: 11px; background: transparent; border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 5px 11px; color: var(--text-secondary); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-sans); }
+    .trybtn:hover { background: var(--surface-1); }
+
+    .schmwrap { padding: 0 18px 18px; }
+    .schlbl { font-size: 10px; color: var(--text-muted); margin-bottom: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; padding-top: 14px; border-top: 0.5px solid var(--border); }
+    .schr { border: 0.5px solid var(--border); border-radius: 7px; margin: 5px 0; overflow: hidden; }
+    .schh { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--surface-2); cursor: pointer; }
+    .schh:hover { background: var(--surface-1); }
+    .schn { font-size: 12px; font-family: var(--font-mono); color: var(--text-primary); flex: 1; }
+    .schc { font-size: 10px; color: var(--text-muted); }
+    .schd { display: none; border-top: 0.5px solid var(--border); padding: 10px 12px; background: var(--surface-0); }
+    .schd.op { display: block; }
+    .fr { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; border-bottom: 0.5px solid var(--border); font-size: 11px; }
+    .fr:last-child { border: none; }
+    .fn { font-family: var(--font-mono); font-size: 10px; color: var(--text-primary); min-width: 120px; padding-top: 1px; }
+    .ft { min-width: 72px; padding-top: 1px; }
+    .fdesc { color: var(--text-muted); flex: 1; line-height: 1.5; }
+
+    .foot { padding: 10px 18px; background: var(--surface-1); border-top: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .fl { font-size: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+    .fr2 { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+<div class="portal">
+
+  <div class="topbar">
+    <div class="rdot"></div>
+    <span class="topbar-title">GreenCart — inventory-query-api — Render</span>
+    <span class="topbar-url">inventory.greencart.onrender.com</span>
+  </div>
+
+  <div class="hero">
+    <div class="open-badge"><i class="ti ti-world" style="font-size:12px"></i> Public API &middot; No auth required &middot; OpenAPI 3.1</div>
+    <h1>GreenCart Inventory Query API</h1>
+    <p>Read-only access to GreenCart's live supermarket inventory. Query stock levels, search products, browse categories, and check availability by store — all without an account.</p>
+    <div class="meta">
+      <div class="mi"><i class="ti ti-tag" style="font-size:13px"></i>&nbsp;<b>v1.3.0</b></div>
+      <div class="mi"><i class="ti ti-eye" style="font-size:13px"></i>&nbsp;<b>Read-only</b></div>
+      <div class="mi"><i class="ti ti-clock" style="font-size:13px"></i>&nbsp;Rate limit: <b>120 req / min</b></div>
+      <div class="mi"><i class="ti ti-refresh" style="font-size:13px"></i>&nbsp;Stock refreshed: <b>every 60 s</b></div>
+    </div>
+  </div>
+
+  <div class="servers">
+    <span class="slbl">Server</span>
+    <div class="spill"><div class="d"></div> https://inventory.greencart.onrender.com/v1 <span class="etag">Production</span></div>
+  </div>
+
+  <div class="notice">
+    <i class="ti ti-lock-open" style="font-size:16px;color:var(--text-success);flex-shrink:0;margin-top:1px"></i>
+    <p>This API is fully public. No API key, token, or account is needed. All endpoints are read-only — no writes, no deletions. Rate limiting applies per IP address.</p>
+  </div>
+
+  <div class="nav">
+    <button class="np act" onclick="filter('all',this)"><i class="ti ti-layout-list" style="font-size:13px"></i> All</button>
+    <button class="np" onclick="filter('inv',this)"><div class="nc c-inv"></div> Inventory</button>
+    <button class="np" onclick="filter('prod',this)"><div class="nc c-prod"></div> Products</button>
+    <button class="np" onclick="filter('store',this)"><div class="nc c-store"></div> Stores</button>
+    <button class="np" onclick="filter('cat',this)"><div class="nc c-cat"></div> Categories</button>
+  </div>
+
+  <div class="secs">
+
+    <!-- Inventory -->
+    <div class="sb" data-tag="inv">
+      <div class="sh" onclick="toggleSec(this)">
+        <div class="nc c-inv" style="width:9px;height:9px;border-radius:2px"></div>
+        <h2>Inventory</h2>
+        <span class="stag">4 endpoints</span>
+        <i class="ti ti-chevron-down chev op"></i>
+      </div>
+      <div class="sbody">
+
+        <div class="ep">
+          <div class="er" onclick="toggleEp(this)">
+            <span class="mth get">GET</span>
+            <span class="epath">/inventory</span>
+            <span class="esum">Browse all stock</span>
+          </div>
+          <div class="ed">
+            <p class="ddesc">Returns current stock levels across all GreenCart stores. Filter by store, category, or availability. Paginated, 50 items per page by default.</p>
+            <p class="ptitle">Query parameters</p>
+            <table class="ptbl">
+              <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+              <tr><td>store_id</td><td><span class="tb">string</span></td><td>Filter to one store</td></tr>
+              <tr><td>category</td><td><span class="tb">string</span></td><td>produce, dairy, bakery, frozen…</td></tr>
+              <tr><td>in_stock</td><td><span class="tb">boolean</span></td><td>Only show available items</td></tr>
+              <tr><td>page</td><td><span class="tb">integer</span></td><td>Page number (default 1)</td></tr>
+              <tr><td>limit</td><td><span class="tb">integer</span></td><td>Per page, max 100</td></tr>
+            </table>
+            <div class="rblock">
+              <p class="ptitle" style="margin-top:10px">Responses</p>
+              <div class="rrow"><span class="rc r200">200</span><span class="rmsg">Paginated array of InventoryItem objects</span></div>
+              <div class="rrow"><span class="rc r400">400</span><span class="rmsg">Invalid query parameter</span></div>
+            </div>
+            <div class="cb"><span class="k">{</span>
+  <span class="k">"data"</span>: [<span class="k">{</span>
+    <span class="k">"sku"</span>: <span class="s">"PRD-BAN-ORG"</span>,
+    <span class="k">"name"</span>: <span class="s">"Organic Bananas"</span>,
+    <span class="k">"store_id"</span>: <span class="s">"store_001"</span>,
+    <span class="k">"qty_available"</span>: <span class="n">214</span>,
+    <span class="k">"unit"</span>: <span class="s">"lb"</span>,
+    <span class="k">"price"</span>: <span class="n">0.59</span>,
+    <span class="k">"last_updated"</span>: <span class="s">"2026-07-14T09:00:00Z"</span>
+  <span class="k">}</span>],
+  <span class="k">"page"</span>: <span class="n">1</span>, <span class="k">"total"</span>: <span class="n">3841</span>
+<span class="k">}</span></div>
+          </div>
+        </div>
+
+        <div class="ep">
+          <div class="er" onclick="toggleEp(this)">
+            <span class="mth get">GET</span>
+            <span class="epath">/inventory/<span class="pm">{sku}</span></span>
+            <span class="esum">Stock for one product</span>
+          </div>
+          <div class="ed">
+            <p class="ddesc">Returns stock levels for a single SKU across all stores, or filtered to one store via query param.</p>
+            <p class="ptitle">Path parameters</p>
+            <table class="ptbl">
+              <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+              <tr><td>sku<span class="rq"> *</span></td><td><span class="tb">string</span></td><td>Product SKU (e.g. PRD-BAN-ORG)</td></tr>
+            </table>
+            <p class="ptitle" style="margin-top:10px">Query parameters</p>
+            <table class="ptbl">
+              <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+              <tr><td>store_id</td><td><span class="tb">string</span></td><td>Scope to a specific store</td></tr>
+            </table>
+            <div class="rblock">
+              <p class="ptitle" style="margin-top:10px">Responses</p>
+              <div class="rrow"><span class="rc r200">200</span><span class="rmsg">Array of StoreStock objects for this SKU</span></div>
+              <div class="rrow"><span class="rc r404">404</span><span class="rmsg">SKU not found</span></div>
+            </div>
+            <div class="cb"><span class="k">[{</span>
+  <span class="k">"store_id"</span>: <span class="s">"store_001"</span>,
+  <span class="k">"store_name"</span>: <span class="s">"GreenCart Downtown"</span>,
+  <span class="k">"qty_available"</span>: <span class="n">214</span>,
+  <span class="k">"low_stock"</span>: <span class="n">false</span>
+<span class="k">}]</span></div>
+          </div>
+        </div>
+
+        <div class="ep">
+          <div class="er" onclick="toggleEp(this)">
+            <span class="mth get">GET</span>
+            <span class="epath">/inventory/low-stock</span>
+            <span class="esum">Items running low</span>
+          </div>
+          <div class="ed">
+            <p class="ddesc">Returns all items currently at or below the public restock threshold (20 units or fewer). Useful for shoppers checking if an item will still be available.</p>
+            <p class="ptitle">Query parameters</p>
+            <table class="ptbl">
+              <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+              <tr><td>store_id</td><td><span class="tb">string</span></td><td>Scope to one store</td></tr>
+              <tr><td>category</td><td><span class="tb">string</span></td><td>Filter by category</td></tr>
+            </table>
+            <div class="rblock">
+              <p class="ptitle" style="margin-top:10px">Responses</p>
+              <div class="rrow"><span class="rc r200">200</span><span class="rmsg">Array of LowStockItem objects</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ep">
+          <div class="er" onclick="toggleEp(this)">
+            <span class="mth get">GET</span>
+            <span class="epath">/inventory/search</span>
+            <span class="esum">Search by name or SKU</span>
+          </div>
+          <div class="ed">
+            <p class="ddesc">Full-text search across product names, SKUs, and descriptions. Returns matching items with stock levels for the requested store.</p>
+            <p class="ptitle">Query parameters</p>
+            <table class="ptbl">
+              <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+              <tr><td>q<span class="rq"> *</span></td><td><span class="tb">string</span></td><td>Search term (min 2 characters)</td></tr>
+              <tr><td>store_id</td><td><span class="tb">string</span></td><td>Scope results to a store</td></tr>
+              <tr><td>category</td><td><span class="tb">string</span></td><td>Narrow to a category</td></tr>
+            </table>
+            <div class="rblock">
+              <p class="ptitle" style="margin-top:10px">Responses</p>
+              <div class="rrow"><span class="rc r200">200</span><span class="rmsg">Array of SearchResult objects</span></div>
+              <div class="rrow"><span class="rc r400">400</span><span class="rmsg">Query too short or missing</span></div>
+            </div>
+            <div class="cb"><span class="s">GET</span> /inventory/search?q=<span class="s">oat+milk</span>&amp;store_id=<span class="s">store_003</span>
+
+<span class="k">{</span>
+  <span class="k">"results"</span>: [<span class="k">{</span>
+    <span class="k">"sku"</span>: <span class="s">"PRD-OATM-PL"</span>,
+    <span class="k">"name"</span>: <span class="s">"Oat Milk Plain 32oz"</span>,
+    <span class="k">"qty_available"</span>: <span class="n">48</span>,
+    <span class="k">"price"</span>: <span class="n">4.29</span>
+  <span class="k">}</span>],
+  <span class="k">"count"</span>: <span class="n">6</span>
+<span class="k">}</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Products -->
+    <div class="sb" data-tag="prod">
+      <div class="sh" onclick="toggleSec(this)">
+        <div class="nc c-prod" style="width:9px;height:9px;border-radius:2px"></div>
+        <h2>Products</h2>
+        <span class="stag">3 endpoints</span>
+        <i class="ti ti-chevron-down chev op"></i>
+      </div>
+      <div class="sbody">
+
+        <div class="ep">
+          <div class="er" onclick="toggleEp(this)">
+            <span class="mth get">GET</span>
+            <span class="epath">/products</span>
+            <span class="esum">Full product catalog</span>
+          </div>
+          <div class="ed">
+            <p class="ddesc">Browse the complete GreenCart product catalog. Includes name, SKU, category, unit, price, and nutritional flags. Does not include live stock — pair with /inventory for availability.</p>
+            <p class="ptitle">Query parameters</p>
+            <table class="ptbl">
+              <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+              <tr><td>category</td><td><span class="tb">string</span></td><td>Filter by category</td></tr>
+              <tr><td>brand</td><td><span class="tb">string</span></td><td>Filter by brand name</td></tr>
+              <tr><td>organic</td><td><span class="tb">boolean</span></td><td>Only certified organic items</td></tr>
+              <tr><td>page</td><td><span class="tb">integer</span></td><td>Page number (default 1)</td></tr>
+            </table>
+            <div class="rblock">
+              <p class="ptitle" style="margin-top:10px">Responses</p>
+              <div class="rrow"><span class="rc r200">200</span><span class="rmsg">Paginated Product array</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ep">
+          <div class="er" onclick="toggleEp(this)">
+            <span class="mth get">GET</span>
+            <span class="epath">/products/<span class="pm">{sku}</span></span>
+            <span class="esum">Single product detail</span>
+          </div>
+          <div class="ed">
+            <p class="ddesc">Full product record including description, allergens, nutritional info, weight, and brand details.</p>
+            <div class="rblock">
+              <p class="ptitle">Responses</p>
+              <div class="rrow"><span class="rc r200">200</span><span class="rmsg">Full Product object</span></div>
+              <div class="rrow"><span class="rc r404">404</span><span class="rmsg">SKU not found</span></div>
+            </div>
+            <div class="cb"><span class="k">{</span>
+  <span class="k">"sku"</span>: <span class="s">"PRD-BAN-ORG"</span>,
+  <span class="k">"name"</span>: <span class="s">"Organic Bananas"</span>,
+  <span class="k">"brand"</span>: <span class="s">"FarmFresh"</span>,
+  <span class="k">"category"</span>: <span class="s">"produce"</span>,
+  <span class="k">"unit"</span>: <span class="s">"lb"</span>,
+  <span class="k">"price"</span>: <span class="n">0.59</span>,
+  <span class="k">"organic"</span>: <span class="n">true</span>,
+  <span class="k">"allergens"</span>: []
+<span class="k">}</span></div>
+          </div>
+        </div>
+
+        <div class="ep">
+          <div class="er" onclick="toggleEp(this)">
+            <span class="mth get">GET</span>
+            <span class="epath">/products/<span class="pm">{sku}</span>/availability</span>
+            <span class="esum">Product and stock combined</span>
+          </div>
+          <div class="ed">
+            <p class="ddesc">Convenience endpoint that returns product details and live stock levels across all stores in one response. Avoids a second /inventory call.</p>
+            <div class="rblock">
+              <p class="ptitle">Responses</p>
+              <div class="rrow"><span class="rc r200">200</span><span class="rmsg">Product object with embedded store_stock array</span></div>
+              <div class="rrow"><span class="rc r404">404</span><span class="rmsg">SKU not found</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Stores -->
+    <div class="sb" data-tag="store">
+      <div class="sh" onclick="toggleSec(this)">
+        <div class="nc c-store" style="width:9px;height:9px;border-radius:2px"></div>
+        <h2>Stores</h2>
+        <span class="stag">2 endpoints</span>
+        <i class="ti ti-chevron-down chev"></i>
+      </div>
+      <div class="sbody" style="display:none">
+        <div class="ep">
+          <div class="er" onclick="toggleEp(this)">
+            <span class="mth get">GET</span>
+            <span class="epath">/stores</span>
+            <span class="esum">All store locations</span>
+          </div>
+          <div class="ed">
+            <p class="ddesc">Lists all active GreenCart store locations with address, opening hours, and timezone.</p>
+            <div class="cb"><span class="k">[{</span>
+  <span class="k">"id"</span>: <span class="s">"store_001"</span>,
+  <span class="k">"name"</span>: <span class="s">"GreenCart Downtown"</span>,
+  <span class="k">"address"</span>: <span class="s">"88 Market St, San Francisco, CA"</span>,
+  <span class="k">"hours"</span>: <span class="s">"07:00-22:00"</span>,
+  <span class="k">"timezone"</span>: <span class="s">"America/Los_Angeles"</span>
+<span class="k">}]</span></div>
+          </div>
+        </div>
+        <div class="ep">
+          <div class="er" onclick="toggleEp(this)">
+            <span class="mth get">GET</span>
+            <span class="epath">/stores/<span class="pm">{storeId}</span>/summary</span>
+            <span class="esum">Store stock snapshot</span>
+          </div>
+          <div class="ed">
+            <p class="ddesc">Returns a high-level inventory snapshot for a store: total SKUs stocked, low-stock count, and categories carried.</p>
+            <div class="rblock">
+              <p class="ptitle">Responses</p>
+              <div class="rrow"><span class="rc r200">200</span><span class="rmsg">StoreSummary object</span></div>
+              <div class="rrow"><span class="rc r404">404</span><span class="rmsg">Store not found</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="sb" data-tag="cat">
+      <div class="sh" onclick="toggleSec(this)">
+        <div class="nc c-cat" style="width:9px;height:9px;border-radius:2px"></div>
+        <h2>Categories</h2>
+        <span class="stag">2 endpoints</span>
+        <i class="ti ti-chevron-down chev"></i>
+      </div>
+      <div class="sbody" style="display:none">
+        <div class="ep">
+          <div class="er" onclick="toggleEp(this)">
+            <span class="mth get">GET</span>
+            <span class="epath">/categories</span>
+            <span class="esum">List all categories</span>
+          </div>
+          <div class="ed">
+            <p class="ddesc">Returns all product categories with item counts and top-level subcategories.</p>
+            <div class="cb"><span class="k">[{</span>
+  <span class="k">"slug"</span>: <span class="s">"produce"</span>,
+  <span class="k">"label"</span>: <span class="s">"Fresh produce"</span>,
+  <span class="k">"product_count"</span>: <span class="n">412</span>,
+  <span class="k">"subcategories"</span>: [<span class="s">"fruits"</span>, <span class="s">"vegetables"</span>, <span class="s">"herbs"</span>]
+<span class="k">}]</span></div>
+          </div>
+        </div>
+        <div class="ep">
+          <div class="er" onclick="toggleEp(this)">
+            <span class="mth get">GET</span>
+            <span class="epath">/categories/<span class="pm">{slug}</span>/inventory</span>
+            <span class="esum">Category stock overview</span>
+          </div>
+          <div class="ed">
+            <p class="ddesc">Returns all in-stock products within a category, optionally scoped to a store. Sorted by availability descending.</p>
+            <p class="ptitle">Query parameters</p>
+            <table class="ptbl">
+              <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+              <tr><td>store_id</td><td><span class="tb">string</span></td><td>Scope to one store</td></tr>
+              <tr><td>in_stock</td><td><span class="tb">boolean</span></td><td>Filter to available only</td></tr>
+            </table>
+            <div class="rblock">
+              <p class="ptitle" style="margin-top:10px">Responses</p>
+              <div class="rrow"><span class="rc r200">200</span><span class="rmsg">Array of InventoryItem objects</span></div>
+              <div class="rrow"><span class="rc r404">404</span><span class="rmsg">Category slug not found</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Schemas -->
+  <div class="schmwrap">
+    <p class="schlbl">Schemas</p>
+
+    <div class="schr">
+      <div class="schh" onclick="toggleSch(this)">
+        <i class="ti ti-braces" style="font-size:14px;color:var(--text-muted)"></i>
+        <span class="schn">InventoryItem</span><span class="schc">8 fields</span>
+        <i class="ti ti-chevron-down chev"></i>
+      </div>
+      <div class="schd">
+        <div class="fr"><span class="fn">sku</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Product SKU identifier</span></div>
+        <div class="fr"><span class="fn">name</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Product display name</span></div>
+        <div class="fr"><span class="fn">store_id</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Store location identifier</span></div>
+        <div class="fr"><span class="fn">qty_available</span><span class="ft"><span class="tb">integer</span></span><span class="fdesc">Units currently in stock</span></div>
+        <div class="fr"><span class="fn">low_stock</span><span class="ft"><span class="tb">boolean</span></span><span class="fdesc">True when qty is 20 or fewer</span></div>
+        <div class="fr"><span class="fn">unit</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">each, lb, kg, oz, pack</span></div>
+        <div class="fr"><span class="fn">price</span><span class="ft"><span class="tb">number</span></span><span class="fdesc">Current retail price in USD</span></div>
+        <div class="fr"><span class="fn">last_updated</span><span class="ft"><span class="tb">date-time</span></span><span class="fdesc">ISO 8601 stock timestamp</span></div>
+      </div>
+    </div>
+
+    <div class="schr">
+      <div class="schh" onclick="toggleSch(this)">
+        <i class="ti ti-braces" style="font-size:14px;color:var(--text-muted)"></i>
+        <span class="schn">Product</span><span class="schc">9 fields</span>
+        <i class="ti ti-chevron-down chev"></i>
+      </div>
+      <div class="schd">
+        <div class="fr"><span class="fn">sku</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Unique product code</span></div>
+        <div class="fr"><span class="fn">name</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Display name</span></div>
+        <div class="fr"><span class="fn">brand</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Brand or label</span></div>
+        <div class="fr"><span class="fn">category</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Category slug</span></div>
+        <div class="fr"><span class="fn">unit</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Selling unit</span></div>
+        <div class="fr"><span class="fn">price</span><span class="ft"><span class="tb">number</span></span><span class="fdesc">Retail price USD</span></div>
+        <div class="fr"><span class="fn">organic</span><span class="ft"><span class="tb">boolean</span></span><span class="fdesc">USDA Organic certified</span></div>
+        <div class="fr"><span class="fn">allergens</span><span class="ft"><span class="tb">array</span></span><span class="fdesc">List of allergen strings</span></div>
+        <div class="fr"><span class="fn">description</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Short product description</span></div>
+      </div>
+    </div>
+
+    <div class="schr">
+      <div class="schh" onclick="toggleSch(this)">
+        <i class="ti ti-braces" style="font-size:14px;color:var(--text-muted)"></i>
+        <span class="schn">StoreStock</span><span class="schc">5 fields</span>
+        <i class="ti ti-chevron-down chev"></i>
+      </div>
+      <div class="schd">
+        <div class="fr"><span class="fn">store_id</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Store identifier</span></div>
+        <div class="fr"><span class="fn">store_name</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Human-readable store name</span></div>
+        <div class="fr"><span class="fn">qty_available</span><span class="ft"><span class="tb">integer</span></span><span class="fdesc">Current on-hand count</span></div>
+        <div class="fr"><span class="fn">low_stock</span><span class="ft"><span class="tb">boolean</span></span><span class="fdesc">Below restock threshold</span></div>
+        <div class="fr"><span class="fn">last_updated</span><span class="ft"><span class="tb">date-time</span></span><span class="fdesc">Last sync from POS</span></div>
+      </div>
+    </div>
+
+    <div class="schr">
+      <div class="schh" onclick="toggleSch(this)">
+        <i class="ti ti-braces" style="font-size:14px;color:var(--text-muted)"></i>
+        <span class="schn">Store</span><span class="schc">5 fields</span>
+        <i class="ti ti-chevron-down chev"></i>
+      </div>
+      <div class="schd">
+        <div class="fr"><span class="fn">id</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Store identifier (store_…)</span></div>
+        <div class="fr"><span class="fn">name</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Store display name</span></div>
+        <div class="fr"><span class="fn">address</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Full street address</span></div>
+        <div class="fr"><span class="fn">hours</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">Opening hours (HH:MM-HH:MM)</span></div>
+        <div class="fr"><span class="fn">timezone</span><span class="ft"><span class="tb">string</span></span><span class="fdesc">IANA timezone string</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <div class="fl"><div class="rdot"></div>&nbsp;Deployed on Render &nbsp;&middot;&nbsp; GreenCart Inc. &copy; 2026</div>
+    <div class="fr2">OpenAPI 3.1 &nbsp;&middot;&nbsp; v1.3.0 &nbsp;&middot;&nbsp; Public</div>
+  </div>
+
+</div>
+</div>
+
+<script>
+  function toggleEp(row) { row.nextElementSibling.classList.toggle('op'); }
+  function toggleSec(h) {
+    const b = h.nextElementSibling, c = h.querySelector('.chev'), open = c.classList.contains('op');
+    b.style.display = open ? 'none' : 'block';
+    c.classList.toggle('op', !open);
+  }
+  function toggleSch(h) {
+    const d = h.nextElementSibling, c = h.querySelector('.chev');
+    d.classList.toggle('op'); c.classList.toggle('op', d.classList.contains('op'));
+  }
+  function filter(tag, btn) {
+    document.querySelectorAll('.np').forEach(p => p.classList.remove('act'));
+    btn.classList.add('act');
+    document.querySelectorAll('.sb').forEach(b => {
+      b.style.display = (tag === 'all' || b.dataset.tag === tag) ? 'block' : 'none';
+    });
+  }
+</script>
+</body>
+</html>
